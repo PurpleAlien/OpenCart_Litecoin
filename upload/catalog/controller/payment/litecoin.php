@@ -34,7 +34,7 @@ class ControllerPaymentLitecoin extends Controller {
 		$order_id = $this->session->data['order_id'];
 		$order = $this->model_checkout_order->getOrder($order_id);
 
-		$current_default_currency = "USD";
+		$current_default_currency =  $this->config->get('config_currency');
 		
 		$this->data['litecoin_total'] = round($this->currency->convert($order['total'], $current_default_currency, "LTC"),4);
 		
@@ -58,7 +58,8 @@ class ControllerPaymentLitecoin extends Controller {
 		$this->data['error'] = false;
 		
 		$this->data['litecoin_send_address'] = $litecoin->getaccountaddress($this->config->get('litecoin_prefix').'_'.$order_id);
-		
+		$this->db->query("UPDATE `" . DB_PREFIX . "order` SET bitcoin_address = '" . $this->data['litecoin_send_address'] . "', date_modified = NOW() WHERE order_id = '" . (int)$order_id . "'");
+
 		if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/payment/litecoin.tpl')) {
 			$this->template = $this->config->get('config_template') . '/template/payment/litecoin.tpl';
 		} else {
@@ -73,7 +74,7 @@ class ControllerPaymentLitecoin extends Controller {
         $this->load->model('checkout/order');
 		$order_id = $this->session->data['order_id'];
         $order = $this->model_checkout_order->getOrder($order_id);
-		$current_default_currency = "USD";		
+		$current_default_currency = $this->config->get('config_currency');		
 		$litecoin_total = round($this->currency->convert($order['total'], $current_default_currency, "LTC"),4);
 		require_once('jsonRPCClient.php');
 		$litecoin = new jsonRPCClient('http://'.$this->config->get('litecoin_rpc_username').':'.$this->config->get('litecoin_rpc_password').'@'.$this->config->get('litecoin_rpc_address').':'.$this->config->get('litecoin_rpc_port').'/');
